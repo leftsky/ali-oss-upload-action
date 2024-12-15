@@ -59461,11 +59461,73 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 1730:
+/***/ 7263:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const ali_oss_1 = __importDefault(__nccwpck_require__(4391));
+const core_1 = __nccwpck_require__(7484);
+const config = {
+    accessKeyId: (0, core_1.getInput)('accessKeyId'),
+    accessKeySecret: (0, core_1.getInput)('accessKeySecret'),
+    region: (0, core_1.getInput)('region'),
+    bucket: (0, core_1.getInput)('bucket')
+};
+if (!config.accessKeyId ||
+    !config.accessKeySecret ||
+    !config.region ||
+    !config.bucket) {
+    throw new Error('请配置accessKeyId, accessKeySecret, region, bucket');
+}
+const client = new ali_oss_1.default(config);
+exports["default"] = client;
+
+
+/***/ }),
+
+/***/ 7173:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -59479,48 +59541,47 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core_1 = __nccwpck_require__(7484);
-const ali_oss_1 = __importDefault(__nccwpck_require__(4391));
+exports.deployToOss = deployToOss;
 const fs_1 = __importDefault(__nccwpck_require__(9896));
-const config = {
-    accessKeyId: (0, core_1.getInput)('accessKeyId'),
-    accessKeySecret: (0, core_1.getInput)('accessKeySecret'),
-    region: (0, core_1.getInput)('region'),
-    bucket: (0, core_1.getInput)('bucket')
-};
-if (!config.accessKeyId ||
-    !config.accessKeySecret ||
-    !config.region ||
-    !config.bucket) {
-    throw new Error('请配置accessKeyId, accessKeySecret, region, bucket');
+const ossClient_1 = __importDefault(__nccwpck_require__(7263));
+const core = __importStar(__nccwpck_require__(7484));
+function deployToOss(localPath, targetPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const docs = fs_1.default.readdirSync(localPath);
+        const fileMap = docs.map(function (doc) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const _src = `${localPath}/${doc}`, _dist = `${targetPath}/${doc}`;
+                const st = fs_1.default.statSync(_src);
+                if (st.isFile())
+                    return putOSS(_dist, _src);
+                return deployToOss(_src, _dist);
+            });
+        });
+        return Promise.all(fileMap);
+    });
 }
-const dir = (0, core_1.getInput)('dir');
-const targetDir = (0, core_1.getInput)('targetDir');
-if (!dir || !targetDir) {
-    throw new Error('请配置上传目录和目标目录');
-}
-const client = new ali_oss_1.default(Object.assign({}, config
-// authorizationV4: true,
-));
-const uploadFiles = (dir, targetDir) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const files = fs_1.default.readdirSync(dir);
-        for (const file of files) {
-            const filePath = dir + file;
-            const stat = fs_1.default.statSync(filePath);
-            if (stat.isDirectory()) {
-                yield uploadFiles(filePath + '/', targetDir + file + '/');
-            }
-            else {
-                yield client.put(targetDir + file, filePath);
-            }
+/**
+ * 上传文件到 OSS
+ * @param {string} uploadPath 表示上传到 OSS 的 Object 名称
+ * @param {string} logoFilePath 本地文件夹或者文件路径
+ */
+function putOSS(uploadPath, logoFilePath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let tryTime = 0;
+        try {
+            tryTime++;
+            const result = yield ossClient_1.default.put(uploadPath, logoFilePath);
+            core.info(`${new Date().toLocaleString()}>>>${uploadPath} uploaded successfully`);
+            return result;
         }
-    }
-    catch (e) {
-        console.log(e);
-    }
-});
-uploadFiles(dir, targetDir);
+        catch (err) {
+            if (tryTime === 3) {
+                throw new Error(`${logoFilePath} upload failed`);
+            }
+            return putOSS(uploadPath, logoFilePath);
+        }
+    });
+}
 
 
 /***/ }),
@@ -61560,12 +61621,26 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"urllib","version":"2.44.0","p
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(1730);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __nccwpck_require__(7484);
+const ossUpload_1 = __nccwpck_require__(7173);
+const dir = (0, core_1.getInput)('dir');
+const targetDir = (0, core_1.getInput)('targetDir');
+if (!dir || !targetDir) {
+    throw new Error('请配置上传目录和目标目录');
+}
+(0, ossUpload_1.deployToOss)(dir, targetDir).then(() => {
+    console.log('上传成功');
+});
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
