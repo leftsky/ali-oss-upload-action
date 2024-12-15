@@ -1,7 +1,8 @@
 {
-  "name": "ali-oss-upload-action",
-  "version": "1.0.0",
-  "main": "main.js",
+  "name": "ali-oss-uploader",
+  "version": "0.0.0",
+  "private": true,
+  "main": "index.js",
   "author": "leftsky <leftsky@vip.qq.com>",
   "license": "MIT",
   "type": "module",
