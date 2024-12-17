@@ -23,7 +23,7 @@ const client = new OSS(config)
 // 判断密钥是否正确，链接是否成功
 client.listBuckets().then((res) => {
   core.info('OOS链接成功')
-  core.info(`Bucket: ${res.buckets.map((bucket) => bucket.name).join(', ')}`)
+  // core.info(`Bucket: ${res.buckets.map((bucket) => bucket.name).join(', ')}`)
 }).catch((err) => {
   core.error('OOS链接失败，请检查密钥是否正确')
   throw err
