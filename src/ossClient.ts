@@ -26,6 +26,7 @@ client.listBuckets().then((res) => {
   core.info(`Bucket: ${res.buckets.map((bucket) => bucket.name).join(', ')}`)
 }).catch((err) => {
   core.error('OOS链接失败，请检查密钥是否正确')
+  console.log(config)
   throw err
 })
 
