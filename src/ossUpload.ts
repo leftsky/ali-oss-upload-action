@@ -4,19 +4,14 @@ import * as core from '@actions/core'
 
 export async function deployToOss(localPath: string, targetPath: string): Promise<any[]> {
   const docs = fs.readdirSync(localPath)
-  for (const doc of docs) {
+  const fileMap = docs.map(async function(doc) {
     const _src = `${localPath}/${doc}`
     const _dist = `${targetPath}/${doc}`
     const st = fs.statSync(_src)
-    if (st.isFile()) {
-      await putOSS(_dist, _src)
-    } else if (st.isDirectory()) {
-      await deployToOss(_src, _dist)
-    } else {
-      core.warning(`文件类型错误: ${_src}`)
-    }
-  }
-  return []
+    if (st.isFile()) return putOSS(_dist, _src)
+    return deployToOss(_src, _dist)
+  })
+  return Promise.all(fileMap)
 }
 
 
